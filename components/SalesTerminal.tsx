@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ShoppingCart, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import type { Book } from './BooksList';
+import { useCurrency } from '@/app/currency-context';
 
 export function SalesTerminal() {
   const [books, setBooks] = useState<Book[]>([]);
@@ -11,17 +12,10 @@ export function SalesTerminal() {
   const [quantity, setQuantity] = useState<number>(1);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     async function loadBooks() {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        setBooks([
-          { id: '1', title: 'The Pragmatic Programmer', author: 'David Thomas', price: 45.00, available_quantity: 10 },
-          { id: '2', title: 'Clean Code', author: 'Robert C. Martin', price: 50.00, available_quantity: 5 },
-          { id: '3', title: 'Atomic Habits', author: 'James Clear', price: 20.00, available_quantity: 15 }
-        ]);
-        return;
-      }
       try {
         const { data } = await supabase.from('books').select('id, title, author, price, available_quantity').gt('available_quantity', 0);
         if (data) setBooks(data);
@@ -40,29 +34,21 @@ export function SalesTerminal() {
     setMessage(null);
 
     try {
-      // Mock API call if no Supabase URL
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        await new Promise((resolve) => setTimeout(resolve, 800));
-        setMessage({ type: 'success', text: 'Sale registered (Mock Mode)' });
-        setQuantity(1);
-        setSelectedBook('');
-      } else {
-        const res = await fetch('/api/sales', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ bookId: selectedBook, quantity }),
-        });
+      const res = await fetch('/api/sales', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookId: selectedBook, quantity }),
+      });
 
-        const data = await res.json();
-        
-        if (!res.ok) {
-          throw new Error(data.error || 'Transaction failed');
-        }
-
-        setMessage({ type: 'success', text: `Sale successful! Total: $${data.sale.total_price}` });
-        setQuantity(1);
-        setSelectedBook('');
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'Transaction failed');
       }
+
+      setMessage({ type: 'success', text: `Sale successful! Total: ${formatPrice(data.sale.total_price)}` });
+      setQuantity(1);
+      setSelectedBook('');
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message });
     } finally {
@@ -120,11 +106,11 @@ export function SalesTerminal() {
         <div className="mt-6 p-4 bg-slate-50 rounded-2xl border border-dashed border-slate-300 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-slate-500">Subtotal</span>
-            <span className="font-bold">${(currentBook ? currentBook.price * quantity : 0).toFixed(2)}</span>
+            <span className="font-bold">{formatPrice(currentBook ? currentBook.price * quantity : 0)}</span>
           </div>
           <div className="flex justify-between text-lg pt-2 border-t border-slate-200 font-black text-indigo-700">
             <span>Total</span>
-            <span>${(currentBook ? currentBook.price * quantity : 0).toFixed(2)}</span>
+            <span>{formatPrice(currentBook ? currentBook.price * quantity : 0)}</span>
           </div>
         </div>
 

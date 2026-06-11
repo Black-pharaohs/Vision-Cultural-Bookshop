@@ -15,18 +15,24 @@ export function EventsList() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [notifying, setNotifying] = useState<string | null>(null);
+
+  const handleNotify = async (eventId: string) => {
+    setNotifying(eventId);
+    try {
+      const res = await fetch(`/api/events/${eventId}/notify`, { method: 'POST' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to send notifications');
+      alert('✅ ' + data.message);
+    } catch (err: any) {
+      alert('❌ Error: ' + err.message);
+    } finally {
+      setNotifying(null);
+    }
+  };
 
   useEffect(() => {
     async function fetchEvents() {
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        setEvents([
-          { id: '1', name: 'Tech Talk: The Future of AI', event_date: '2026-07-01', event_time: '18:00:00' },
-          { id: '2', name: 'Book Signing: Clean Code', event_date: '2026-07-15', event_time: '14:00:00' }
-        ]);
-        setLoading(false);
-        return;
-      }
-
       try {
         const { data, error } = await supabase.from('events').select('*').order('event_date', { ascending: true });
         if (error) throw error;
@@ -59,9 +65,18 @@ export function EventsList() {
               </p>
             </div>
           </div>
-          <button className="bg-white text-indigo-900 px-4 py-2 rounded-lg text-xs font-black shrink-0 hover:bg-indigo-50 transition-colors">
-            Register
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button 
+              onClick={() => handleNotify(event.id)}
+              disabled={notifying === event.id}
+              className="bg-indigo-800 text-indigo-100 px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors disabled:opacity-50"
+            >
+              {notifying === event.id ? 'Sending...' : '🔔 Remind Staff'}
+            </button>
+            <button className="bg-white text-indigo-900 px-4 py-2 rounded-lg text-xs font-black hover:bg-indigo-50 transition-colors">
+              Register
+            </button>
+          </div>
         </div>
       ))}
       {events.length === 0 && (

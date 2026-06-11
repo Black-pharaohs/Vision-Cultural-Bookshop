@@ -1,6 +1,9 @@
 import { BooksList } from '@/components/BooksList';
 import { EventsList } from '@/components/EventsList';
 import { SalesTerminal } from '@/components/SalesTerminal';
+import { CurrencySelector } from '@/components/CurrencySelector';
+import { FinancialReports } from '@/components/FinancialReports';
+import { SystemStatus } from '@/components/SystemStatus';
 
 export default function Home() {
   return (
@@ -21,9 +24,10 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <div className="hidden sm:flex flex-col items-end">
+            <CurrencySelector />
+            <div className="hidden sm:flex flex-col items-end gap-1">
               <span className="text-sm font-semibold">User</span>
-              <span className="text-xs text-slate-500">System Online</span>
+              <SystemStatus />
             </div>
             <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-indigo-100 flex items-center justify-center text-xl">
               <span className="w-5 h-5 opacity-70">👤</span>
@@ -34,6 +38,14 @@ export default function Home() {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 mt-8 grid grid-cols-1 md:grid-cols-12 gap-6 h-full">
         <div className="md:col-span-8 flex flex-col gap-6">
+          {/* Financial Reports Section */}
+          <section className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-slate-800">Financial Reports</h2>
+            </div>
+            <FinancialReports />
+          </section>
+
           {/* Books Inventory Section */}
           <section className="flex flex-col gap-4">
             <div className="flex items-center justify-between">

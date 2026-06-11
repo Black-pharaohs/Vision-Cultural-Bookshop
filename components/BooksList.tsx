@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BookOpen, AlertCircle } from 'lucide-react';
+import { useCurrency } from '@/app/currency-context';
 
 export interface Book {
   id: string;
@@ -16,20 +17,10 @@ export function BooksList() {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { formatPrice } = useCurrency();
 
   useEffect(() => {
     async function fetchBooks() {
-      // Mock Data if Supabase is not configured
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-        setBooks([
-          { id: '1', title: 'The Pragmatic Programmer', author: 'David Thomas', price: 45.00, available_quantity: 10 },
-          { id: '2', title: 'Clean Code', author: 'Robert C. Martin', price: 50.00, available_quantity: 5 },
-          { id: '3', title: 'Atomic Habits', author: 'James Clear', price: 20.00, available_quantity: 15 }
-        ]);
-        setLoading(false);
-        return;
-      }
-
       try {
         const { data, error } = await supabase.from('books').select('*').order('created_at', { ascending: false });
         if (error) throw error;
@@ -70,7 +61,7 @@ export function BooksList() {
                   {book.available_quantity} copies
                 </span>
               </td>
-              <td className="p-4 text-right font-bold">${book.price.toFixed(2)}</td>
+              <td className="p-4 text-right font-bold">{formatPrice(book.price)}</td>
             </tr>
           ))}
           {books.length === 0 && (
